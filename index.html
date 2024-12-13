@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GitHub图床管理</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub图床管理</h1>
+        <div class="dropzone" id="dropzone">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>拖拽图片到这里或点击上传</p>
+        </div>
+        
+        <div class="folder-upload">
+            <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none;">
+            <button id="folderUploadBtn" class="btn btn-primary">
+                <i class="fas fa-folder-open"></i> 上传文件夹
+            </button>
+        </div>
+
+        <div class="preview" id="preview">
+            <h3>预览区域</h3>
+            <div class="preview-grid" id="preview-grid"></div>
+        </div>
+        <div class="history" id="history">
+            <h3>上传历史</h3>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="/static/js/upload.js"></script>
+</body>
+</html>
+```
+
+**styles.css**
+```css
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    padding: 20px;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+.dropzone {
+    width: 100%;
+    height: 250px;
+    border: 3px dashed #3498db;
+    border-radius: 10px;
+    text-align: center;
+    padding: 40px;
+    margin: 20px 0;
+    background-color: #fff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.dropzone:hover {
+    border-color: #2980b9;
+    background-color: #f7f9fc;
+}
+
+.dropzone.drag-over {
+    border-color: #27ae60;
+    background-color: #e8f6f3;
+}
+
+.dropzone i {
+    font-size: 48px;
+    color: #3498db;
+    margin-bottom: 15px;
+}
+
+.dropzone p {
+    font-size: 18px;
+    color: #7f8c8d;
+}
+
+.preview {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border: 1px solid #e1e4e8;
+}
+
+.preview h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #3498db;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 25px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.preview img {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 3px solid #fff;
+}
+
+.preview img:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    border-color: #3498db;
+}
+
+.preview-item {
+    position: relative;
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.preview-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.preview-item .image-info {
+    padding: 10px;
+    text-align: center;
+    color: #666;
+    font-size: 0.9em;
+    border-top: 1px solid #eee;
+    margin-top: 10px;
+}
+
+.history {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    max-height: 300px;
+    overflow-y: auto;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.history h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+.history p {
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    font-size: 14px;
+    color: #666;
+}
+
+.history p:hover {
+    background-color: #e9ecef;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .dropzone {
+        height: 200px;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 2em;
+    }
+}
+
+.upload-success {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    animation: fadeOut 3s forwards;
+    text-align: center;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+.folder-upload {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.btn {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn:hover {
+    background-color: #2980b9;
+}
+
+.btn i {
+    font-size: 20px;
+}
+```
+
+**upload.js**
+```javascript
+const dropzone = document.getElementById('dropzone');
+const previewGrid = document.getElementById('preview-grid');
+const history = document.getElementById('history');
+
+// 处理拖拽
+dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add('drag-over');
+});
+
+dropzone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+});
+
+dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+});
+
+// 点击上传
+dropzone.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = (e) => handleFiles(e.target.files);
+    input.click();
+});
+
+function handleFiles(files) {
+    Array.from(files).forEach(file => {
+        // 预览图片
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                
+                const info = document.createElement('div');
+                info.className = 'image-info';
+                info.innerHTML = `
+                    <div>${file.name}</div>
+                    <div>${formatFileSize(file.size)}</div>
+                `;
+                
+                previewItem.appendChild(img);
+                previewItem.appendChild(info);
+                previewGrid.appendChild(previewItem);
+                
+                // 显示上传成功提示
+                const successMsg = document.createElement('div');
+                successMsg.className = 'upload-success';
+                successMsg.textContent = `${file.name} 上传成功！`;
+                dropzone.parentNode.insertBefore(successMsg, dropzone.nextSibling);
+                
+                // 3秒后移除提示
+                setTimeout(() => {
+                    successMsg.remove();
+                }, 3000);
+            }
+            reader.readAsDataURL(file);
+        }
+        
+        // 记录日志
+        logUpload(file.name);
+    });
+}
+
+function logUpload(filename) {
+    const now = new Date().toLocaleString();
+    const logEntry = document.createElement('p');
+    logEntry.innerHTML = `<i class="fas fa-check-circle"></i> ${now}: 上传文件 ${filename}`;
+    history.insertBefore(logEntry, history.firstChild.nextSibling);
+
+    // 写入日志文件
+    fetch('/log', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            time: now,
+            filename: filename
+        })
+    });
+}
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// 添加文件夹上传功能
+const folderUploadBtn = document.getElementById('folderUploadBtn');
+const folderInput = document.getElementById('folderInput');
+
+folderUploadBtn.addEventListener('click', () => {
+    folderInput.click();
+});
+
+folderInput.addEventListener('change', (e) => {
+    const files = e.target.files;
+    
+    // 创建 FormData 对象
+    const formData = new FormData();
+    
+    // 创建一个临时 zip 文件
+    const zip = new JSZip();
+    
+    // 将所有文件添加到 zip
+    Array.from(files).forEach(file => {
+        zip.file(file.webkitRelativePath, file);
+    });
+    
+    // 生成 zip 文件
+    zip.generateAsync({type:"blob"}).then(function(content) {
+        // 创建一个新的 File 对象
+        const zipFile = new File([content], 'upload_folder.zip', {type: 'application/zip'});
+        
+        // 添加到 FormData
+        formData.append('folder', zipFile);
+        
+        // 发送上传请求
+        fetch('/upload-folder', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                alert('文件夹上传成功！');
+            } else {
+                alert('文件夹上传失败：' + result.error);
+            }
+        })
+        .catch(error => {
+            console.error('上传错误:', error);
+            alert('文件夹上传出现错误');
+        });
+    });
+});
